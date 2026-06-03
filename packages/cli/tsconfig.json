@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "rootDir": "./src",
+        "paths": {
+            "@brick/ai": ["../ai/src/index.ts"],
+            "@brick/agent": ["../agent/src/index.ts"]
+        }
+    },
+    "include": ["src/**/*", "test/**/*"]
+}

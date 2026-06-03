@@ -1,0 +1,22 @@
+{
+    "name": "@brick/cli",
+    "version": "0.1.0",
+    "type": "module",
+    "bin": {
+        "brick": "./dist/index.js"
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@brick/agent": "0.1.0",
+        "@brick/ai": "0.1.0"
+    }
+}

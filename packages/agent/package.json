@@ -15,6 +15,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@brick/ai": "0.1.0"
+        "@brick/ai": "0.1.0",
+        "@sinclair/typebox": "0.34.49"
     }
 }

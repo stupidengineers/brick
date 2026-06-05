@@ -1,5 +1,5 @@
 import { stream, validateToolCall } from "@brick/ai";
-import type { AssistantMessage, Context, ToolResultMessage } from "@brick/ai";
+import type { AssistantMessage, Context, Message, ToolResultMessage } from "@brick/ai";
 import type { Model } from "@brick/ai";
 import { createSession, saveSession } from "./session.js";
 import { getBuiltInTools } from "./tools/index.js";
@@ -24,9 +24,10 @@ export async function runAgent(
     const toolDefs = tools.map((t) => t.definition);
     const toolMap = new Map<string, InternalTool>(tools.map((t) => [t.definition.name, t]));
 
+    const startingMessages: Message[] = options?.initialMessages ?? [];
     const context: Context = {
         systemPrompt: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: task }],
+        messages: [...startingMessages, { role: "user", content: task }],
         tools: toolDefs,
     };
 

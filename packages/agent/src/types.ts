@@ -28,6 +28,8 @@ export interface AgentOptions {
     /** Override the stream function. Used in tests. */
     streamFn?: StreamFn;
     signal?: AbortSignal;
+    /** Prior messages to prepend before the new task message (used for session resume). */
+    initialMessages?: Message[];
 }
 
 export interface Session {

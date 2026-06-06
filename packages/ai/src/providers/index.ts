@@ -63,6 +63,9 @@ export async function* doStream(
     }
 
     let accText = "";
+    // If the response starts with '{', it might be a text-based tool call.
+    // Buffer those deltas and only emit them after confirming it's real text.
+    let maybeTextToolCall = false;
     // accumulate tool calls by index since arguments arrive fragmented
     const pendingToolCalls = new Map<number, { id: string; name: string; args: string }>();
     let stopReason: StopReason = "stop";
@@ -86,8 +89,13 @@ export async function* doStream(
             const delta = choice.delta;
 
             if (delta.content) {
+                if (accText === "" && delta.content.trimStart().startsWith("{")) {
+                    maybeTextToolCall = true;
+                }
                 accText += delta.content;
-                yield { type: "text_delta", delta: delta.content };
+                if (!maybeTextToolCall) {
+                    yield { type: "text_delta", delta: delta.content };
+                }
             }
 
             if (delta.tool_calls) {
@@ -108,6 +116,44 @@ export async function* doStream(
                 stopReason = mapFinishReason(choice.finish_reason);
             }
         }
+    }
+
+    // Detect text-based tool calls: some local models output {"name":"...","arguments":{}}
+    // as text content instead of using the API's tool_calls field.
+    if (pendingToolCalls.size === 0 && accText.trim().startsWith("{")) {
+        try {
+            const parsed = JSON.parse(accText.trim()) as {
+                name?: unknown;
+                arguments?: unknown;
+            };
+            if (
+                typeof parsed.name === "string" &&
+                parsed.arguments !== null &&
+                typeof parsed.arguments === "object"
+            ) {
+                const textToolCall: ToolCallContent = {
+                    type: "toolCall",
+                    id: `text-${Date.now()}`,
+                    name: parsed.name,
+                    arguments: parsed.arguments as Record<string, unknown>,
+                };
+                // suppress the raw JSON text — it was actually a tool call
+                accText = "";
+                pendingToolCalls.set(0, {
+                    id: textToolCall.id,
+                    name: textToolCall.name,
+                    args: JSON.stringify(textToolCall.arguments),
+                });
+                stopReason = "toolUse";
+            }
+        } catch {
+            // not a tool call — keep accText as-is
+        }
+    }
+
+    // If we buffered text thinking it might be a tool call but it wasn't, emit it now.
+    if (maybeTextToolCall && accText) {
+        yield { type: "text_delta", delta: accText };
     }
 
     if (accText) yield { type: "text_end", text: accText };

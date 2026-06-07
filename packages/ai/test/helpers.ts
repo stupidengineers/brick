@@ -12,7 +12,7 @@ export interface OllamaEnv {
 export function getOllamaEnv(): OllamaEnv | null {
     const host = process.env.OLLAMA_HOST;
     if (!host) return null;
-    const modelId = process.env.BRICK_TEST_MODEL ?? "qwen2.5-coder:1.5b";
+    const modelId = process.env.OLLAMA_MODEL ?? "qwen2.5-coder:1.5b";
     return { model: ollamaModel(modelId, host) };
 }
 

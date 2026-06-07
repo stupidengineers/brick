@@ -1,12 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import type { Model } from "@brick/ai";
+import { brickDataDir } from "./paths.js";
 import type { Session } from "./types.js";
 
 function defaultSessionDir(): string {
-    return join(homedir(), ".brick", "sessions");
+    return join(brickDataDir(), "sessions");
 }
 
 function generateId(): string {

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { homedir } from "node:os";
 import { join } from "node:path";
+import { brickConfigDir } from "@brick/agent";
 
 export interface BrickConfig {
     defaultModel: string;
@@ -21,7 +21,7 @@ export function parseModelString(s: string): { provider: string; id: string } {
 }
 
 export async function loadConfig(overrides?: { model?: string }): Promise<BrickConfig> {
-    const configPath = join(homedir(), ".brick", "config.json");
+    const configPath = join(brickConfigDir(), "config.json");
 
     let fileConfig: Partial<BrickConfig> = {};
     try {

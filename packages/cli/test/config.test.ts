@@ -38,19 +38,28 @@ import { loadConfig, parseModelString } from "../src/config.js";
 }
 
 // --- loadConfig ---
+// Override XDG_CONFIG_HOME to isolate tests from the real config file.
 
-const originalHome = process.env.HOME;
+const originalXdgConfigHome = process.env.XDG_CONFIG_HOME;
+
+function restoreEnv() {
+    if (originalXdgConfigHome === undefined) {
+        process.env.XDG_CONFIG_HOME = undefined;
+    } else {
+        process.env.XDG_CONFIG_HOME = originalXdgConfigHome;
+    }
+}
 
 // Missing config file returns defaults
 {
     const tmpDir = await mkdtemp(join(tmpdir(), "brick-config-test-"));
-    process.env.HOME = tmpDir;
+    process.env.XDG_CONFIG_HOME = tmpDir;
 
     const config = await loadConfig();
     assert.equal(config.defaultModel, "ollama/qwen2.5-coder:7b");
     assert.equal(config.ollamaHost, "http://localhost:11434");
 
-    process.env.HOME = originalHome;
+    restoreEnv();
     await rm(tmpDir, { recursive: true });
     console.log("ok: missing config file returns defaults");
 }
@@ -58,19 +67,19 @@ const originalHome = process.env.HOME;
 // Existing config file is merged with defaults
 {
     const tmpDir = await mkdtemp(join(tmpdir(), "brick-config-test-"));
-    await mkdir(join(tmpDir, ".brick"), { recursive: true });
+    await mkdir(join(tmpDir, "brick"), { recursive: true });
     await writeFile(
-        join(tmpDir, ".brick", "config.json"),
+        join(tmpDir, "brick", "config.json"),
         JSON.stringify({ defaultModel: "openai/gpt-4" }),
         "utf-8"
     );
 
-    process.env.HOME = tmpDir;
+    process.env.XDG_CONFIG_HOME = tmpDir;
     const config = await loadConfig();
     assert.equal(config.defaultModel, "openai/gpt-4");
     assert.equal(config.ollamaHost, "http://localhost:11434");
 
-    process.env.HOME = originalHome;
+    restoreEnv();
     await rm(tmpDir, { recursive: true });
     console.log("ok: existing config file is merged with defaults");
 }
@@ -78,18 +87,18 @@ const originalHome = process.env.HOME;
 // overrides.model wins over config file
 {
     const tmpDir = await mkdtemp(join(tmpdir(), "brick-config-test-"));
-    await mkdir(join(tmpDir, ".brick"), { recursive: true });
+    await mkdir(join(tmpDir, "brick"), { recursive: true });
     await writeFile(
-        join(tmpDir, ".brick", "config.json"),
+        join(tmpDir, "brick", "config.json"),
         JSON.stringify({ defaultModel: "openai/gpt-4" }),
         "utf-8"
     );
 
-    process.env.HOME = tmpDir;
+    process.env.XDG_CONFIG_HOME = tmpDir;
     const config = await loadConfig({ model: "custom/my-model" });
     assert.equal(config.defaultModel, "custom/my-model");
 
-    process.env.HOME = originalHome;
+    restoreEnv();
     await rm(tmpDir, { recursive: true });
     console.log("ok: overrides.model wins over config file");
 }
@@ -97,13 +106,13 @@ const originalHome = process.env.HOME;
 // overrides.model wins when no config file
 {
     const tmpDir = await mkdtemp(join(tmpdir(), "brick-config-test-"));
-    process.env.HOME = tmpDir;
+    process.env.XDG_CONFIG_HOME = tmpDir;
 
     const config = await loadConfig({ model: "ollama/llama3" });
     assert.equal(config.defaultModel, "ollama/llama3");
     assert.equal(config.ollamaHost, "http://localhost:11434");
 
-    process.env.HOME = originalHome;
+    restoreEnv();
     await rm(tmpDir, { recursive: true });
     console.log("ok: overrides.model wins over defaults when no config file");
 }

@@ -1,6 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { brickConfigDir } from "@brick/agent";
+import { ollamaModel, openaiModel } from "@brick/ai";
+import type { Model } from "@brick/ai";
+import type { ParsedArgs } from "./args.js";
 
 export interface BrickConfig {
     defaultModel: string;
@@ -41,4 +44,10 @@ export async function loadConfig(overrides?: { model?: string }): Promise<BrickC
     }
 
     return merged;
+}
+
+export async function buildModel(args: Pick<ParsedArgs, "model">): Promise<Model> {
+    const config = await loadConfig(args.model !== undefined ? { model: args.model } : undefined);
+    const { provider, id } = parseModelString(config.defaultModel);
+    return provider === "openai" ? openaiModel(id) : ollamaModel(id, config.ollamaHost);
 }

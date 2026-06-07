@@ -18,6 +18,7 @@ export type {
 
 export { complete } from "./complete.js";
 export { stream } from "./stream.js";
+export { warmupModel } from "./warmup.js";
 export type { StreamHandle } from "./stream.js";
 export { validateToolCall } from "./validate.js";
 export { ollamaModel, openaiModel } from "./providers/index.js";

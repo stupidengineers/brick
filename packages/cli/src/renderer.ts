@@ -1,3 +1,5 @@
+import type { AgentEvent } from "@brick/agent";
+
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 const DIM = "\x1b[2m";
@@ -38,6 +40,32 @@ export function yellow(text: string): string {
 
 export function clearLine(): void {
     process.stdout.write(`\r${CLEAR_LINE}`);
+}
+
+/**
+ * Returns an onEvent callback suitable for passing to runAgent.
+ * Handles streaming text, tool spinners, done, and error rendering.
+ */
+export function makeAgentEventHandler(): (event: AgentEvent) => void {
+    let stopSpinner: ((success: boolean) => void) | undefined;
+
+    return (event: AgentEvent): void => {
+        if (event.type === "text") {
+            write(event.delta);
+        } else if (event.type === "tool_start") {
+            stopSpinner = spinner(event.name);
+        } else if (event.type === "tool_end") {
+            if (stopSpinner !== undefined) {
+                stopSpinner(!event.isError);
+                stopSpinner = undefined;
+            }
+        } else if (event.type === "done") {
+            writeLine("");
+            writeLine(dim("done"));
+        } else if (event.type === "error") {
+            writeLine(red(event.message));
+        }
+    };
 }
 
 export function spinner(label: string): (success: boolean) => void {

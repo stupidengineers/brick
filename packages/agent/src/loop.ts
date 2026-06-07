@@ -6,11 +6,13 @@ import { getBuiltInTools } from "./tools/index.js";
 import type { InternalTool } from "./tools/types.js";
 import type { AgentOptions, AgentResult, Session } from "./types.js";
 
-const SYSTEM_PROMPT = `You are a coding agent that helps with programming tasks.
-Only use tools when the task requires reading, writing, or running something.
-For conversational messages or simple questions, respond directly without calling any tools.
-When using tools: read files before editing them, verify your work after changes.
-When the task is complete, respond with a concise summary.`;
+const SYSTEM_PROMPT = `You are a coding agent. Your job is to help with programming tasks using tools.
+
+Rules:
+- Use tools ONLY when the task involves files, directories, or running commands.
+- If the user says hello, asks a question, or sends a conversational message, respond in plain text — do NOT call any tools.
+- Never call a tool unless you are certain it is required to complete the task.
+- When the task is done, summarize what you did in plain text.`;
 
 export async function runAgent(
     task: string,
